@@ -21,6 +21,19 @@ start_kb = ReplyKeyboardMarkup(
     one_time_keyboard=True
 )
 
+more_kb = ReplyKeyboardMarkup(
+    keyboard=[
+        [
+         KeyboardButton(text='Показати більше'),
+        ],
+        [
+         KeyboardButton(text='В головне меню'),
+        ]
+    ],
+    resize_keyboard=True,
+    one_time_keyboard=True
+)
+
 main_kb = ReplyKeyboardMarkup(
     keyboard=[
         [

@@ -25,6 +25,7 @@ async def fill_quality(message:Message,state:FSMContext,bot:Bot):
         print(BotStates.get_root())
         global find_list
         name = message.text.lower()
+        print(name)
         long_find_list = await name_find_film(name)
         if len(long_find_list) == 0:
             await message.answer('Нчого не знайдено, спробуйте знову')
@@ -72,29 +73,11 @@ async def callback_query(callback_query: types.CallbackQuery,state:FSMContext,bo
                                    reply_markup=reply.season_builder_kb(seasons))
         else:
             await state.update_data(name=url)
-            await state.set_state(BotStates.qality)
-            await bot.send_message(chat_id= callback_query.from_user.id, text = 'Виберіть якість', reply_markup=reply.quality_kb)
+            await state.set_state(BotStates.sound)
+            sound_list = [i for i in rezka.translators]
+            await bot.send_message(chat_id= callback_query.from_user.id, text = 'Виберіть озвучення', reply_markup=reply.sound_builder_kb(sound_list))
     except:
          await callback_query.answer("От халепа, ніц не працює(")
-
-
-@router.message(BotStates.qality)
-async def fill_quality(message:Message,state:FSMContext):
-        await state.update_data(quality=message.text)
-        global quality
-        quality = message.text
-        try:
-              qulity_url = rezka.getStream()(quality)
-
-        except:
-             await message.answer('Ойойой,то є завелика якість', reply_markup=reply.quality_kb)
-
-        else:
-            await message.answer(f'{message.text} якість була застосована')
-            sound_list = [i for i in rezka.translators]
-            await message.answer('Виберіть озвучення ', reply_markup=reply.sound_builder_kb(sound_list))
-            await state.set_state(BotStates.sound)
-
 
 @router.message(BotStates.sound)
 async def fill_sound(message:Message,state:FSMContext,bot:Bot):
@@ -105,26 +88,45 @@ async def fill_sound(message:Message,state:FSMContext,bot:Bot):
         sound = None
     print(sound)
     print(rezka.translators)
-    try:
-        final_url = rezka.getStream(translation=sound)(quality)
-        await send_film(message,state, final_url,bot)
-    except ValueError:
-        final_url = rezka.getStream(translation=f'{sound} ')(quality)
-        await send_film(message,state, final_url,bot)
-    except:
-        await message.answer('Виберіть інще озвучення або нижчу якість', reply_markup=reply.quality_kb)
+    await state.set_state(BotStates.qality)
+    await message.answer(text='Виберіть якість',
+                           reply_markup=reply.quality_kb)
 
 
-async def send_film(message:Message,state:FSMContext,final_url: str,bot:Bot):
+@router.message(BotStates.qality)
+async def fill_quality(message:Message,state:FSMContext,bot:Bot):
+        await state.update_data(quality=message.text)
+        global quality,sound,final_url
+        quality = message.text
+        try:
+              qulity_url = rezka.getStream()(quality)
+
+        except:
+             await message.answer('Виберіть  нижчу якість', reply_markup=reply.quality_kb)
+
+        else:
+            await message.answer(f'{message.text} якість була застосована')
+
+        try:
+            final_url = rezka.getStream(translation=sound)(quality)
+            await send_film(message, state)
+        except ValueError:
+            final_url = rezka.getStream(translation=f'{sound} ')(quality)
+            await send_film(message, state)
+
+
+
+async def send_film(message:Message,state:FSMContext):
     print('send film')
-    await message.answer(f'<b>Ось ваш фільм:</b> {final_url} \n <b>Приємного перегляду!</b>' ,reply_markup=reply.final_kb)
+    global final_url
+    await message.answer(f'<b>Ось ваш фільмь:</b> {final_url} \n <b>Приємного перегляду!</b>' ,reply_markup=reply.final_kb)
     await state.set_state(BotStates.final)
+
 @router.message(BotStates.final)
 async def download_film(message: Message, state: FSMContext, bot: Bot):
-    global final_url,quality
+    global final_url,rezka
     print('download_film')
     print(final_url)
-    global rezka
     send_url = await handlers.methods.download_video(final_url,message,sound,rezka)
     await bot.send_video(chat_id=message.chat.id, video=send_url,reply_markup=reply.main_button_kb)
 
