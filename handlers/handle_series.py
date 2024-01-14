@@ -146,7 +146,7 @@ async def final(message:Message,state:FSMContext,bot:Bot):
     if message.text.lower() == 'завантажити':
         global url
         send_url = await handlers.methods.download_video(url, message)
-        await bot.send_video(chat_id=message.chat.id, video=send_url)
+        await bot.send_video(chat_id=message.chat.id, video=send_url , reply_markup=reply.series_after_download_kb)
     else:
         global chosen_season, chosen_episode
         episods_from_all = await get_episods_from_all(info, chosen_season)

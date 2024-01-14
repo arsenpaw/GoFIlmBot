@@ -11,3 +11,5 @@ class BotStates(StatesGroup):
     s_final = State()
     download = State()
     final = State()
+    show_more = State()
+

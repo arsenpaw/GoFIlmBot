@@ -78,7 +78,6 @@ async def download_video(url: str,message:Message,sound = None,rezka = None) -> 
     else:
        await send_predict_download_time(size,message)
 
-
     destination_folder = 'D:\Bot_Downloads'
     arr = os.listdir('D:\Bot_Downloads')
     print(arr)
