@@ -11,42 +11,76 @@ from handlers.methods import *
 
 router = Router()
 
-@router.message(F.text.lower() == 'дивитись онлайн')
+@router.message(F.text.lower() == 'пошук')
 async def fill_url(message:Message,state:FSMContext):
 
     await state.set_state(BotStates.url)
     print('watch online')
     await message.answer('<b>Це - пошук.</b> Введіть назву серіалу чи фільму.')
 
-
+async def filter_long_list(message,long_find_list,showed_items) -> list:
+    if len(long_find_list) == 0:
+        await message.answer('Нчого не знайдено, спробуйте знову')
+        find_list = []
+    elif len(long_find_list) > showed_items:
+        find_list = long_find_list[:showed_items]
+    else:
+        find_list = long_find_list[:]
+    return find_list
 @router.message(BotStates.url)
-async def fill_quality(message:Message,state:FSMContext,bot:Bot):
-        print('fill quality')
+async def give_film_items(message:Message,state:FSMContext,bot:Bot):
+        global find_list, long_find_list, showed_items
+        print('show items film')
         print(BotStates.get_root())
-        global find_list
         name = message.text.lower()
         print(name)
+        showed_items = 6
         long_find_list = await name_find_film(name)
-        if len(long_find_list) == 0:
-            await message.answer('Нчого не знайдено, спробуйте знову')
-        elif len(long_find_list) > 6:
-            find_list = long_find_list[:6]
-        else:
-            find_list = long_find_list[:]
-        print(find_list[0][0])
-        for i in range(len(find_list)):
-          img_url = find_list[i][0]
-          name = find_list[i][1]
-          info = find_list[i][2]
-          type = find_list[i][3]
-          film_url = find_list[i][4]
-          id = str(find_list[i][5])
-          image = URLInputFile(url=img_url, filename=img_url)
-          print(film_url)
-          print(name)
-          await bot.send_photo(chat_id=message.chat.id, photo=image,caption=f'<b>{name}</b> \n{type}, {info}', reply_markup = reply.film_name_ikb(id))
-        if len(long_find_list) > 6:
-            await message.answer(f'Тут 6 резултатів пошуку, aле я найшов  {len(long_find_list)} збігів.')
+        find_list = await filter_long_list(message,long_find_list,showed_items)
+        await send_film_items(message,bot,find_list)
+
+        if len(long_find_list) > showed_items:
+            await message.answer(f'Тут {showed_items} резултатів пошуку, aле я ще  {len(long_find_list) - showed_items} збігів.',reply_markup=reply.more_kb)
+            await state.set_state(BotStates.show_more)
+@router.message(BotStates.show_more)
+async def send_more(message:Message,state:FSMContext,bot:Bot):
+    print('send more')
+    global find_list, long_find_list, showed_items
+    text = message.text.lower()
+    print(text)
+    print(f'Showe items: {showed_items}')
+    if text == 'показати більше' and showed_items + 6 < len(long_find_list) :
+        find_list = long_find_list[showed_items:showed_items+6]
+        showed_items = showed_items + 6
+        await send_film_items(message,bot,find_list)
+        await message.answer(f'Тут показано {showed_items}, ще є { len(long_find_list) - showed_items}', reply_markup=reply.more_kb)
+    elif text == 'показати більше' and showed_items + 6 >= len(long_find_list):
+        print('show all')
+        find_list = long_find_list[showed_items:]
+        showed_items = len(long_find_list)
+        await send_film_items(message, bot, find_list)
+        await message.answer(f'<b>Це все.</b> \n Якщо не знайшли результату то просто уточніть його.', reply_markup=reply.main_button_kb)
+        await state.set_state(BotStates.url)
+    else:
+        await state.set_state(BotStates.url)
+        await give_film_items(message, state, bot)
+
+
+async def send_film_items(message: Message, bot: Bot, find_list: list):
+
+    for i in range(len(find_list)):
+        img_url = find_list[i][0]
+        name = find_list[i][1]
+        info = find_list[i][2]
+        type = find_list[i][3]
+        film_url = find_list[i][4]
+        id = str(find_list[i][5])
+        image = URLInputFile(url=img_url, filename=img_url)
+        print(film_url)
+        print(name)
+        await bot.send_photo(chat_id=message.chat.id, photo=image, caption=f'<b>{name}</b> \n{type}, {info}',
+                             reply_markup=reply.film_name_ikb(id))
+
 
 
 
@@ -76,7 +110,8 @@ async def callback_query(callback_query: types.CallbackQuery,state:FSMContext,bo
             await state.set_state(BotStates.sound)
             sound_list = [i for i in rezka.translators]
             await bot.send_message(chat_id= callback_query.from_user.id, text = 'Виберіть озвучення', reply_markup=reply.sound_builder_kb(sound_list))
-    except:
+    except Exception as e:
+         print(e)
          await callback_query.answer("От халепа, ніц не працює(")
 
 @router.message(BotStates.sound)

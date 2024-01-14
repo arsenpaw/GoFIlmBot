@@ -37,7 +37,7 @@ more_kb = ReplyKeyboardMarkup(
 main_kb = ReplyKeyboardMarkup(
     keyboard=[
         [
-         KeyboardButton(text='Дивитись онлайн'),
+         KeyboardButton(text='Пошук'),
         ],
         [
          KeyboardButton(text='В головне меню'),
@@ -60,6 +60,18 @@ final_kb = ReplyKeyboardMarkup(
     keyboard=[
         [
          KeyboardButton(text='Завантажити'),
+        ],
+        [
+         KeyboardButton(text='В головне меню'),
+        ]
+    ],
+    resize_keyboard=True,
+    one_time_keyboard=True
+)
+series_after_download_kb = ReplyKeyboardMarkup(
+    keyboard=[
+        [
+         KeyboardButton(text='Наступна серія'),
         ],
         [
          KeyboardButton(text='В головне меню'),

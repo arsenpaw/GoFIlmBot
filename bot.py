@@ -13,7 +13,6 @@ async def main() -> None:
     session = AiohttpSession(
         api=TelegramAPIServer.from_base('http://127.0.0.1:8081')
     )
-    print(session.api.base)
     bot = Bot(config.bot_token.get_secret_value(),session=session, parse_mode='HTML')
     dp = Dispatcher(bot=bot,session=session,is_local=True)
     dp.include_routers(
@@ -22,8 +21,8 @@ async def main() -> None:
         handle_series.router,
         methods.router
     )
-    print(bot.session.api.base)
-    print(bot.session.api.is_local)
+    print('GoFilmBot is started successfully !')
+    print(f'Server is: {bot.session.api.base}')
     await dp.start_polling(bot,skip_updates=True)
 
 
