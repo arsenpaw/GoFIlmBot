@@ -7,8 +7,8 @@ async def name_find_film(name:str) -> list:
     films_info_list = []
     headers = { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"}
     data = {'do': 'search', 'subaction': 'search', 'q': name}
-
     response = requests.post(f'{DOMEN}/search/', data=data, headers=headers)
+    print(response)
     html_string = response.text
     soup = BeautifulSoup(html_string, 'html.parser')
 

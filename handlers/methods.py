@@ -4,7 +4,8 @@ import requests,os
 global dump
 from data.HdRezkaApiMain.HdRezkaApi.HdRezkaApi import *
 from keyboards import reply
-
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 
 router = Router()
@@ -27,9 +28,10 @@ async def convert_meta_to_size(metadata) -> float:
 async def get_video_metadata_from_url(video_url):
     print('get_video_metadata_from_url')
     try:
-        headers = {'Range': 'bytes=0-1000000'}  # Specify the range of bytes you want to fetch (adjust as needed)
-        response = requests.get(video_url, headers=headers, stream=True)
+        headers = {'Range': 'bytes=0-1000000'}
+        response = requests.get(video_url, headers=headers)
         metadata = response.headers
+        print(response)
         print(metadata)
         return metadata
 
@@ -64,8 +66,7 @@ async def convert_to_2GB(message:Message,sound ,rezka):
 
         except ValueError:
                 return rezka.getStream(translation=f'{sound} ')(quality)
-        except:
-            raise ConvertTo2gbExeption
+
 
 async def download_video(url: str,message:Message,sound = None,rezka = None) -> FSInputFile:
     print('download video')
@@ -86,6 +87,7 @@ async def download_video(url: str,message:Message,sound = None,rezka = None) -> 
         full_path = os.path.join(destination_folder, filename)
         return FSInputFile(full_path)
     response = requests.get(url)
+    print(response)
     if response.status_code == 200:
             content = response.content
             full_path = os.path.join(destination_folder, filename)
